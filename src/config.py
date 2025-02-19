@@ -25,7 +25,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "data/")
 # Define paths for training, validation, and testing
 TRAIN_PATH = os.path.join(DATA_DIR, "raw/versions/2/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/train/")
 VALID_PATH = os.path.join(DATA_DIR, "raw/versions/2/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/valid/")
-TEST_PATH = os.path.join(ROOT_DIR, "raw/versions/2/test/test/")
+TEST_PATH = os.path.join(DATA_DIR, "raw/versions/2/test/test/")
 # added processed path
 PROC_DIR = os.path.join(DATA_DIR, "processed/")
 
