@@ -19,6 +19,7 @@ class MLFlowLogger(callbacks.Callback):
             mlflow.log_metric("val_accuracy", logs.get('val_accuracy'), step=epoch)
 
 def setup_mlflow_experiment():
+    mlflow.set_tracking_uri("https://dagshub.com/philkleer/deepleaf_mlops.mlflow")
     mlflow.set_experiment("Plant_Classification_Experiment")
     mlflow.start_run()
     mlflow.log_param("model", "VGG16")
