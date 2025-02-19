@@ -1,5 +1,9 @@
 # 🌱 Deep Leaf - Plant Disease Classification MLOps Pipeline
 
+## Work in progress
+
+Project was done during training at [DataScientest.com](DataScientest.com) together with @schytze0, @94O-O-O-O-O49.
+
 ## 📌 Overview
 **Deep Leaf** is a deep learning-based **image classification pipeline** for detecting plant diseases using **Transfer Learning (VGG16)**. It follows **MLOps best practices**, enabling:
 - **Automated dataset handling from Kaggle**
