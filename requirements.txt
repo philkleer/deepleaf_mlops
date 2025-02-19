@@ -1,0 +1,9 @@
+python-dotenv
+tensorflow>=2.8
+numpy
+pandas
+matplotlib
+Pillow
+kagglehub
+json5
+tqdm

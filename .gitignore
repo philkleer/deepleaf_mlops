@@ -1,0 +1,9 @@
+.env
+__pycache__/
+README_files/
+my_readme.md
+tf-gpu/ 
+.DS_Store
+dvc_local/
+/data
+/models
