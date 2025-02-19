@@ -8,6 +8,7 @@ import os
 from helpers import load_tfrecord_data
 import mlflow
 import mlflow.keras
+import dagshub
 
 # ML Flow setup (still needs to be tested)
 class MLFlowLogger(callbacks.Callback):
@@ -19,6 +20,12 @@ class MLFlowLogger(callbacks.Callback):
             mlflow.log_metric("val_accuracy", logs.get('val_accuracy'), step=epoch)
 
 def setup_mlflow_experiment():
+    dagshub.init(
+        repo_owner="philkleer", 
+        repo_name="deepleaf_mlops", 
+        mlflow=True
+    )
+    
     mlflow.set_tracking_uri("https://dagshub.com/philkleer/deepleaf_mlops.mlflow")
     mlflow.set_experiment("Plant_Classification_Experiment")
     mlflow.start_run()

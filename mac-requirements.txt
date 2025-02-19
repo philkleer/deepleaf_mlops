@@ -12,3 +12,4 @@ tqdm
 dvc
 dvc[s3]
 mlflow
+dagshub
