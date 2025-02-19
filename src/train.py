@@ -6,6 +6,27 @@ from model import build_vgg16_model
 from config import MODEL_PATH, HISTORY_PATH, EPOCHS, BATCH_SIZE, PROC_DIR, NUM_CLASSES
 import os
 from helpers import load_tfrecord_data
+import mlflow
+import mlflow.keras
+
+# ML Flow setup (still needs to be tested)
+class MLFlowLogger(callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        if logs:
+            mlflow.log_metric("train_loss", logs.get('loss'), step=epoch)
+            mlflow.log_metric("train_accuracy", logs.get('accuracy'), step=epoch)
+            mlflow.log_metric("val_loss", logs.get('val_loss'), step=epoch)
+            mlflow.log_metric("val_accuracy", logs.get('val_accuracy'), step=epoch)
+
+def setup_mlflow_experiment():
+    mlflow.set_experiment("Plant_Classification_Experiment")
+    mlflow.start_run()
+    mlflow.log_param("model", "VGG16")
+    mlflow.log_param("epochs", EPOCHS)
+    mlflow.log_param("batch_size", BATCH_SIZE)
+    mlflow.log_param("num_classes", NUM_CLASSES)
+    mlflow.log_param("input_shape", (224, 224, 3))
+
 
 # Old function adjusted
 def train_model():
@@ -13,9 +34,12 @@ def train_model():
     Trains the model in two phases:
     1. Train only the classification head (with frozen base layers).
     2. Fine-tune the top layers of the base model with a smaller learning rate.
+    3. saves scores with ML Flow (needs to be tested)
     """
-    # train_data, val_data = load_data()
     
+    # load mlflow
+    setup_mlflow_experiment()
+
     # new insertion
     train_data = load_tfrecord_data(
         os.path.join(
@@ -27,11 +51,9 @@ def train_model():
     val_data = load_tfrecord_data(os.path.join(PROC_DIR, "val_data.tfrecord"))
     
     input_shape = (224, 224, 3)
-    # num_classes = train_data.num_classes
     # Number of classes from the label shape
     num_classes = NUM_CLASSES
     
-
     # Step 1: Train classification head with frozen base model
     model, _ = build_vgg16_model(input_shape, num_classes, trainable_base=False)
 
@@ -49,6 +71,9 @@ def train_model():
         mode='max'
     )
 
+    # logging in mlflow
+    mlflow_logger = MLFlowLogger()
+
     # manually setting steps per epoch
     steps_per_epoch = sum(1 for _ in train_data)
 
@@ -58,7 +83,7 @@ def train_model():
         validation_data=val_data, 
         epochs=int(EPOCHS*0.7), 
         steps_per_epoch=steps_per_epoch,
-        callbacks=[checkpoint]
+        callbacks=[checkpoint, mlflow_logger]
     )
 
     # Step 2: Fine-tune the last layers of the base model
@@ -81,11 +106,16 @@ def train_model():
         validation_data=val_data, 
         epochs=int(EPOCHS*0.3), 
         steps_per_epoch=steps_per_epoch,
-        callbacks=[checkpoint]
+        callbacks=[checkpoint, mlflow_logger]
     )
 
     model.save(MODEL_PATH, save_format='keras')
     print(f"Training completed. Model saved at {MODEL_PATH}")
+
+    # saving mlflow logs manually to 
+    mlflow.keras.log_model(model, "model")
+    mlflow.end_run()
+    print("Scores are saved with MLflow.")
 
     # Combine both training histories
     history = {
