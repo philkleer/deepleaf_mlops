@@ -9,3 +9,5 @@ json5
 tensorflow-metal
 tensorflow-macos
 tqdm
+dvc
+dvc[s3]

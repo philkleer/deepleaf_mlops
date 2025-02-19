@@ -7,3 +7,5 @@ Pillow
 kagglehub
 json5
 tqdm
+dvc
+dvc[s3]
