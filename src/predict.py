@@ -2,44 +2,40 @@ import os
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.preprocessing import image
-from config import MODEL_PATH, IMG_SIZE, TEST_PATH, PROC_DIR
+# from data_loader import load_data
+from config import MODEL_PATH, IMG_SIZE, TEST_PATH
 from helpers import load_tfrecord_data
 
 def load_trained_model():
-    """
+    '''
     Loads the trained model from disk.
     
     Returns:
     - model: The loaded Keras model.
-    """
+    '''
     return tf.keras.models.load_model(MODEL_PATH)
 
 def get_class_labels():
-    """
+    '''
     Retrieves class labels dynamically from the training data.
 
     Returns:
     - class_labels (dict): Mapping from index to class label.
-    """
-    
-    train_data = load_tfrecord_data(
-        os.path.join(
-            PROC_DIR,
-            "train_data.tfrecord"
-        )
-    )
+    '''
 
+    # new data load from .tfrecord
+    train_data = load_tfrecord_data('data/raw/train_subset1.tfrecord')
+
+    # new approach with dvc-tracking of data
     class_labels = []
-
-    # Iterate over the dataset and collect class labels
-    # Decode one-hot back to class indices
+    # decoding one-hot back to class indices
     for _, label in train_data:
-        class_labels.append(tf.argmax(label, axis=-1).numpy()[0])
+        class_labels.append(tf.argmax(label, axis=-1).numpy()[0]) 
 
     return class_labels
 
 def preprocess_image(img_path):
-    """
+    '''
     Loads and preprocesses a single image for model prediction.
 
     Args:
@@ -47,14 +43,14 @@ def preprocess_image(img_path):
 
     Returns:
     - img_array: Preprocessed image array.
-    """
+    '''
     img = image.load_img(img_path, target_size=IMG_SIZE)
     img_array = image.img_to_array(img) / 255.0  # Normalize pixel values
     img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
     return img_array
 
 def predict_single_image(img_path):
-    """
+    '''
     Predicts the class of a single image.
 
     Args:
@@ -62,7 +58,7 @@ def predict_single_image(img_path):
 
     Returns:
     - Predicted class label.
-    """
+    '''
     model = load_trained_model()
     class_labels = get_class_labels()  # Get dynamic class labels
     img_array = preprocess_image(img_path)
@@ -72,8 +68,9 @@ def predict_single_image(img_path):
 
     return class_labels[class_index]  # Return class label instead of index
 
+# TODO: We just want to predict single images to make it easier.
 def predict_folder(folder_path):
-    """
+    '''
     Predicts the class for all images in a folder.
 
     Args:
@@ -81,20 +78,13 @@ def predict_folder(folder_path):
 
     Returns:
     - results (dict): Dictionary mapping image filenames to predicted labels.
-    """
+    '''
     model = load_trained_model()
     class_labels = get_class_labels()  # Get dynamic class labels
     results = {}
 
-    print(f"TEST_PATH: {folder_path}")
-
     # Get all image files
-    image_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.lower().endswith((".jpg", ".png"))]
-
-    if not image_files:
-        print("No images found in the folder.")
-    else:
-        print(f"Found {len(image_files)} images: {image_files}")
+    image_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.lower().endswith(('.jpg', '.png'))]
 
     for img_path in image_files:
         img_array = preprocess_image(img_path)
@@ -104,13 +94,12 @@ def predict_folder(folder_path):
 
     return results
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Run predictions on the test folder by default
-    print(f"Running predictions on the test set: {TEST_PATH}")
+    print(f'Running predictions on the test set: {TEST_PATH}')
     results = predict_folder(TEST_PATH)
 
-    print("\nPredictions for Test Set:")
-
+    print('\nPredictions for Test Set:')
     for filename, label in results.items():
-        print(f"{filename}: {label}")
+        print(f'{filename}: {label}')
 

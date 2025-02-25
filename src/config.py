@@ -17,17 +17,12 @@ KAGGLE_KEY = os.getenv(f"KAGGLE_KEY_{GITHUB_ACTOR}") or os.getenv("KAGGLE_KEY", 
 
 # Define a dataset storage directory inside the user's home
 HOME_DIR = os.path.expanduser("~")  
-# ROOT_FOLDER = os.path.join(HOME_DIR, ".cache/kagglehub/datasets/vipoooool/new-plant-diseases-dataset/versions/2")
-# DATA_DIR = os.path.join(ROOT_FOLDER, "new plant diseases dataset(augmented)/New Plant Diseases Dataset(Augmented)/")
 ROOT_DIR = os.path.abspath("./")
-DATA_DIR = os.path.join(ROOT_DIR, "data/")
 
 # Define paths for training, validation, and testing
-TRAIN_PATH = os.path.join(DATA_DIR, "raw/versions/2/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/train/")
-VALID_PATH = os.path.join(DATA_DIR, "raw/versions/2/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/valid/")
-TEST_PATH = os.path.join(DATA_DIR, "raw/versions/2/test/test/")
-# added processed path
-PROC_DIR = os.path.join(DATA_DIR, "processed/")
+TRAIN_PATH = os.path.join(HOME_DIR, ".cache/kagglehub/datasets/vipoooool/new-plant-diseases-dataset/versions/2/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/train/")
+VALID_PATH = os.path.join(HOME_DIR, ".cache/kagglehub/datasets/vipoooool/new-plant-diseases-dataset/versions/2/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/valid/")
+TEST_PATH = os.path.join(HOME_DIR, ".cache/kagglehub/datasets/vipoooool/new-plant-diseases-dataset/versions/2/test/test")
 
 # Model save path
 MODEL_DIR = "./models"  # Directory to store trained models

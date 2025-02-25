@@ -1,6 +1,7 @@
 import tensorflow as tf
 from config import NUM_CLASSES, BATCH_SIZE
 
+# INFO: Just another file to store functions that might be used in more than a single script
 # including saved train_/val_data.tfrecord
 def _parse_function(proto):
     # Define the feature structure
@@ -33,13 +34,3 @@ def load_tfrecord_data(tfrecord_file):
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
     return dataset
-
-def get_class_labels(dataset):
-    # Initialize an empty set to track unique labels
-    class_labels = set()
-
-    # Iterate over the dataset and collect class labels
-    for _, label in dataset:
-        class_labels.update(tf.argmax(label, axis=-1).numpy())  # Decode one-hot back to class indices
-
-    return sorted(class_labels) 

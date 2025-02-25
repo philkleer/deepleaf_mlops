@@ -4,7 +4,8 @@ from config import (
     KAGGLE_USERNAME, KAGGLE_KEY, TRAIN_PATH, VALID_PATH, TEST_PATH,
     MODEL_PATH, LOGS_DIR, HISTORY_PATH, GITHUB_ACTOR
 )
-from data_loader import download_dataset
+# from data_loader import download_dataset
+from raw_data_split import download_dataset
 
 # Force loading .env BEFORE importing config
 dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
