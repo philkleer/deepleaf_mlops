@@ -31,7 +31,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "plant_disease_model.keras")  # Path for sa
 # Training parameters
 BATCH_SIZE = 32
 IMG_SIZE = (224, 224)
-EPOCHS = 50
+EPOCHS = 5
 
 # Ensure the model directory exists
 if not os.path.exists(MODEL_DIR):

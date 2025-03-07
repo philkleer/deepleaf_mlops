@@ -7,3 +7,4 @@ tf-gpu/
 dvc_local/
 /data
 /models
+/src/trials.py

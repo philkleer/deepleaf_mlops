@@ -2,7 +2,7 @@
 
 ## Work in progress
 
-Project was done during training at [DataScientest.com](DataScientest.com) together with @schytze0, @94O-O-O-O-O49.
+Project was done during training at [DataScientest.com](DataScientest.com) together with [@schytze0](https://github.com/schytze0), [@94O-O-O-O-O49](https://github.com/94O-O-O-O-O49), and [@Nielsvd06](https://github.com/Nielsvd06).
 
 ## 📌 Overview
 **Deep Leaf** is a deep learning-based **image classification pipeline** for detecting plant diseases using **Transfer Learning (VGG16)**. It follows **MLOps best practices**, enabling:
@@ -13,7 +13,7 @@ Project was done during training at [DataScientest.com](DataScientest.com) toget
 | File/Folder            | Description |
 |------------------------|-------------|
 | `src/config.py`           | Stores **global configuration** (paths, credentials, model settings). |
-| `src/data_loader.py`      | Handles **dataset downloading & preprocessing**. |
+| `src/raw_data_split.py`      | Handles **dataset downloading & preprocessing**. |
 | `src/model.py`            | Defines the **VGG16 transfer learning model**. |
 | `src/train.py`            | **Trains the model** in two phases and saves training history. |
 | `src/predict.py`          | **Makes predictions** on single images or folders. |
@@ -25,102 +25,6 @@ Project was done during training at [DataScientest.com](DataScientest.com) toget
 | `data/` _(Folder)_  | Stores **data**. (handled with DVC) |
 | `.dvc/` _(Folder)_  | DVC configuration folder |
 
-## 🚀 **Setting Up Deep Leaf for New Developers**
-Follow these steps to get started:
+## Architecture so far
 
-### **1️⃣ Fork & Clone the Repositorry**
-```sh
-git clone https://github.com/schytze0/deep_leaf.git
-cd deep_leaf
-```
-
-### **2️⃣Fo Create a virtual environment**
-Depending on your OS (for example with conda).
-```sh
-conda create -n my_env python=3.10  
-```
-
-### **3️⃣ Install Dependencieses**
-```sh
-pip install -r requirements.txt
-```
-
-
-### **4️⃣ Set Up Kaggle API Access**
-Each team member must store their own Kaggle credentials as GitHub repository secrets.
-
-Step 1: Get Your Kaggle API Key
-
-Go to Kaggle Account Settings.
-Click "Create New API Token", which downloads kaggle.json.
-
-Step 2: Add Credentials as GitHub Secrets
-
-Go to GitHub Repo → Settings → Secrets → Actions → New Repository Secret
-
-For each team member, add:
-
-Secret Name	|	Value
-
-KAGGLE_USERNAME_YOURNAME -> "your-kaggle-username"
-
-KAGGLE_KEY_YOURNAME -> "your-kaggle-api-key"
-
-
-## **🔑 Setting Up the .env File for Automated Environment Setup**
-
-To avoid manually setting environment variables every time, store them in a .env file.
-
-### **1️⃣ Create the .env v File**
-Inside the project folder, create a .env file:
-```sh
-vim .env
-```
-
-### **2️⃣ Add the Following Variables to .envnv**
-```ini
-# User Configuration
-GITHUB_ACTOR=your_github_username
-
-# Kaggle API Credentials
-KAGGLE_USERNAME_YOURNAME=your_kaggle_username
-KAGGLE_KEY_YOURNAME=your_kaggle_api_key
-```
-
-## **✅Run the test_config.py file to check the setup**
-```sh
-python test_config.py
-```
-
-There might appear some Tensorflow related warnings (depending on your machine and GPU/CUDA support). The script  should print "Configuration check complete." at the end of the output.
-
-## **🔄 Training the Model**
-
-To train the model, run:
-```sh
-python train.py
-```
-
-✔ Downloads dataset from Kaggle.
-✔ Trains model in two phases.
-✔ Saves best model to models/.
-✔ Logs training history in logs/history_*.json.
-
-Instead of the solution above, you can use the train-model that is saved under `models/`. 
-
-## **🔍 Making Predictions**
-
-### **1️⃣ Predict a Single Image**
-```sh
-python predict.py --image path/to/image.jpg
-```
-
-### **2️⃣ Predict a Single Image**
-```sh
-python predict.py --folder path/to/folder.jpg
-```
-
-## **📊 Visualizing Training Performance**
-```sh
-python utils.py
-```
+![](architecture.excalidraw.png)

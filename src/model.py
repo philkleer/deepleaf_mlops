@@ -29,12 +29,16 @@ def build_vgg16_model(input_shape, num_classes, trainable_base=False, fine_tune_
             layer.trainable = False
 
     # Our custom classification part on top of the base model
+    regularizer = tf.keras.regularizers.l2(1e-4)
+
     x = layers.GlobalAveragePooling2D()(base_model.output)
-    x = layers.Dense(1024, activation='relu')(x)
+    x = layers.Dense(1024, activation='relu', kernel_regularizer=regularizer)(x)
+    x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.2)(x)
-    x = layers.Dense(512, activation='relu')(x)
+    x = layers.Dense(512, activation='relu', kernel_regularizer=regularizer)(x)
     x = layers.Dropout(0.2)(x)
-    x = layers.Dense(256, activation='relu')(x)
+    x = layers.Dense(256, activation='relu', kernel_regularizer=regularizer)(x)
+    x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.2)(x)
     outputs = layers.Dense(num_classes, activation='softmax')(x)
 
