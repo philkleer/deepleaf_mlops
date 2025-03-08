@@ -1,15 +1,12 @@
 python-dotenv
-# tensorflow>=2.8
+tensorflow==2.16.2
 numpy
 pandas
 matplotlib
 Pillow
 kagglehub
 json5
-tensorflow-metal
-tensorflow-macos
+tensorflow-macos==2.16.2
+tensorflow-metal==1.2
 tqdm
-dvc
-dvc[s3]
 mlflow
-dagshub
