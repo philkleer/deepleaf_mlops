@@ -55,9 +55,9 @@ def save_model_if_better(current_model, current_val_accuracy, model_path):
 
     if current_val_accuracy > best_val_accuracy:
         current_model.save(model_path, save_format='keras')
-        print(f"🔥 New best model saved! Validation accuracy improved from {best_val_accuracy} → {current_val_accuracy}")
+        print(f"🔥 New best model saved! Validation accuracy improved from {round(best_val_accuracy, 4)} → {round(current_val_accuracy, 4)}")
     else:
-        print(f"⚠️ No improvement. Best accuracy remains {best_val_accuracy}. Model not saved.")
+        print(f"⚠️ No improvement. Best accuracy remains {round(best_val_accuracy, 4)}. Model not saved.")
 
 
 # get best val accuracy
@@ -84,6 +84,7 @@ class MLFlowLogger(callbacks.Callback):
         self.final_val_f1_score = 0
         self.final_run_id = None
         self.best_val_accuracy = 0
+        self.best_val_f1_score = 0
 
     def on_epoch_end(self, epoch, logs=None):
         if logs:
@@ -98,9 +99,11 @@ class MLFlowLogger(callbacks.Callback):
 
         # here we check if the recent val_accuracy is the best 
         val_accuracy = logs.get('val_accuracy')
+        val_f1_score = logs.get('val_f1_score')
         
         if val_accuracy > self.best_val_accuracy:
             self.best_val_accuracy = val_accuracy
+            self.best_val_f1_score = val_f1_score
             mlflow.log_metric('best_val_accuracy', self.best_val_accuracy)
             mlflow.log_metric('best_val_f1_score', self.best_val_f1_score)
             print(f'Updated best validation accuracy: {round(val_accuracy, 4)} ✅')
@@ -157,10 +160,10 @@ def train_model():
     
     # new insertion
     # TODO: Probably this could be part of the api, the path to the training data?
-    train_data, train_records = load_tfrecord_data('data/raw/train_subset1.tfrecord')
+    train_data, train_records = load_tfrecord_data('data/raw/train_subset4.tfrecord')
     print('Training data loaded ✅')
 
-    val_data, val_records = load_tfrecord_data('data/raw/valid_subset1.tfrecord')
+    val_data, val_records = load_tfrecord_data('data/raw/valid_subset4.tfrecord')
     print('Validation data loaded ✅')
 
     input_shape = (224, 224, 3)
@@ -257,7 +260,7 @@ def train_model():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     MODEL_DIR_TIMESTAMP = f"{MODEL_DIR}/model_{timestamp}.keras"
 
-    model.save(MODEL_DIR_TIMESTAMP, save_format='keras')
+    model.save(MODEL_DIR_TIMESTAMP)
     print(f'Model saved under {MODEL_DIR_TIMESTAMP} ✅')
     print('Training completed. 🏁')
 

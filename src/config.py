@@ -31,7 +31,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "model_production.keras")  # Path for savin
 # Training parameters
 BATCH_SIZE = 32
 IMG_SIZE = (224, 224)
-EPOCHS = 30
+EPOCHS = 20
 
 # Ensure the model directory exists
 if not os.path.exists(MODEL_DIR):
