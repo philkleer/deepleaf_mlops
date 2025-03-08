@@ -2,7 +2,7 @@
 
 ## Work in progress
 
-Project was done during training at [DataScientest.com](DataScientest.com) together with [@schytze0](https://github.com/schytze0), [@94O-O-O-O-O49](https://github.com/94O-O-O-O-O49), and [@Nielsvd06](https://github.com/Nielsvd06).
+Project was done during training at [DataScientest.com](DataScientest.com) together with [@schytze0](https://github.com/schytze0), [@94O-O-O-O-O49](https://github.com/94O-O-O-O-O49), and [@Nielsvd06](https://github.com/Nielsvd06). The aim of the project is to demonstrate abilities in MLOps, therefore, the model estimation is not priority and is simplified to take less time (which might be not the best model in a real case).
 
 ## 📌 Overview
 **Deep Leaf** is a deep learning-based **image classification pipeline** for detecting plant diseases using **Transfer Learning (VGG16)**. It follows **MLOps best practices**, enabling:

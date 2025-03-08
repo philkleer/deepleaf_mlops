@@ -3,12 +3,13 @@ tf.keras.backend.clear_session()
 from tensorflow.keras import optimizers, callbacks
 import json
 from model import build_vgg16_model
-from config import MODEL_PATH, HISTORY_PATH, EPOCHS, BATCH_SIZE, NUM_CLASSES
+from config import MODEL_DIR, MODEL_PATH, HISTORY_PATH, EPOCHS, BATCH_SIZE, NUM_CLASSES
 import os
 from helpers import load_tfrecord_data
 import mlflow
 import mlflow.keras
 from dotenv import load_dotenv
+from datetime import datetime
 
 # F1 score to get better reporting
 class F1Score(tf.keras.metrics.Metric):
@@ -76,7 +77,7 @@ class MLFlowLogger(callbacks.Callback):
     def on_train_end(self, logs=None):        
         # here we log the final scores (final scores might not always be the best; overfitting)
         if hasattr(self, 'is_finetuning') and self.is_finetuning:
-            print(f'Final validation accuracy: {round(logs.get('val_accuracy', 0), 4)}')
+            print(f'Final validation accuracy: {round(logs.get("val_accuracy", 0), 4)}')
             # Log the final results, this is what you'll compare across models
             mlflow.log_metric('final_val_accuracy', logs.get('val_accuracy', 0))
             mlflow.log_metric('final_val_f1_score', logs.get('val_f1_score', 0))
@@ -93,8 +94,8 @@ def setup_mlflow_experiment():
     mlflow.log_param('input_shape', (224, 224, 3))
     
     # Final metrics
-    final_val_accuracy = float(mlflow.active_run().data.metrics.get('best_val_accuracy', 0))
-    final_val_f1_score = float(mlflow.active_run().data.metrics.get('best_val_f1_score', 0))
+    final_val_accuracy = float(mlflow.active_run().data.metrics.get('final_val_accuracy', 0))
+    final_val_f1_score = float(mlflow.active_run().data.metrics.get('final_val_f1_score', 0))
 
     mlflow.log_metric('final_val_accuracy', final_val_accuracy)
     mlflow.log_metric('final_val_f1_score', final_val_f1_score)
@@ -154,14 +155,6 @@ def train_model():
     )
     print('Training model built ✅')
 
-    # Callbacks
-    checkpoint = callbacks.ModelCheckpoint(
-        MODEL_PATH, 
-        save_best_only=True, 
-        monitor='val_accuracy', 
-        mode='max'
-    )
-
     # INFO: Starting MLflow
     mlflow_logger = MLFlowLogger()
     print('MLflow logger started ✅')
@@ -172,28 +165,29 @@ def train_model():
         train_data, 
         validation_data=val_data, 
         epochs=int(EPOCHS*0.7), 
-        callbacks=[checkpoint, mlflow_logger]
+        callbacks=[mlflow_logger]
     )
     print('Training classification ended ✅')
 
     # Step 2: Fine-tune the last layers of the base model
     print('Fine-tuning model...', end='\r')
+    tf.keras.backend.clear_session()
+    # setting indicator for last training
+    # mlflow_logger.is_finetuning = True
+
+    # reinitializing optimizer
+    optimizer = optimizers.Adam(learning_rate=1e-4, amsgrad=True)
+
     model, _ = build_vgg16_model(
         input_shape, 
         num_classes, 
         trainable_base=True, 
         fine_tune_layers=4
     )
-    print('Fine-tuning model built ✅')
-
-    # setting indicator for last training
-    mlflow_logger.is_finetuning = True  
+    print('Fine-tuning model built ✅')  
 
     model.compile(
-        optimizer=optimizers.Adam(
-            learning_rate=0.00001,
-            # clipvalue=1
-        ),
+        optimizer=optimizer,
         loss='categorical_crossentropy',
         metrics=['accuracy', F1Score()]
     )
@@ -203,7 +197,7 @@ def train_model():
         train_data, 
         validation_data=val_data, 
         epochs=int(EPOCHS*0.3), 
-        callbacks=[checkpoint, mlflow_logger]
+        callbacks=[mlflow_logger]
     )
     print('Fine-Tuning classification ended ✅')
 
@@ -227,7 +221,13 @@ def train_model():
         json.dump(history, f)
         print(f'History saved in {HISTORY_PATH} ✅.')
 
-    print('Training completed.')
+    # saving model
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    MODEL_DIR_TIMESTAMP = f"{MODEL_DIR}/model_{timestamp}.keras"
+
+    model.save(MODEL_DIR_TIMESTAMP, save_format='keras')
+    print(f'Model saved under {MODEL_DIR_TIMESTAMP} ✅')
+    print('Training completed. 🏁')
 
 if __name__ == '__main__':
     train_model()
