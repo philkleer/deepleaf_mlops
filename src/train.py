@@ -45,6 +45,37 @@ else:
 os.environ['MLFLOW_TRACKING_USERNAME'] = os.getenv('DAGSHUB_USERNAME')
 os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv('DAGSHUB_KEY')
 
+# Save better model
+def save_model_if_better(current_model, current_val_accuracy, model_path):
+    """
+    Compare the current model's validation accuracy with the best from all MLflow runs
+    and save only if it's better.
+    """
+    best_val_accuracy = get_best_val_accuracy()  # Fetch previous best accuracy
+
+    if current_val_accuracy > best_val_accuracy:
+        current_model.save(model_path, save_format='keras')
+        print(f"🔥 New best model saved! Validation accuracy improved from {best_val_accuracy} → {current_val_accuracy}")
+    else:
+        print(f"⚠️ No improvement. Best accuracy remains {best_val_accuracy}. Model not saved.")
+
+
+# get best val accuracy
+def get_best_val_accuracy():
+    """Fetch the best validation accuracy from all previous MLflow runs."""
+    client = mlflow.tracking.MlflowClient()
+    experiment = mlflow.get_experiment_by_name("Plant_Classification_Experiment")
+    
+    if experiment is None:
+        return 0   
+    
+    experiment_id = experiment.experiment_id
+    runs = client.search_runs(experiment_id, order_by=["metrics.best_val_accuracy DESC"], max_results=1)
+    
+    if runs:
+        return runs[0].data.metrics.get("best_val_accuracy", 0)  # Get highest accuracy run
+    return 0  
+
 # ML Flow setup
 class MLFlowLogger(callbacks.Callback):
     def __init__(self):
@@ -52,7 +83,6 @@ class MLFlowLogger(callbacks.Callback):
         self.final_val_accuracy = 0
         self.final_val_f1_score = 0
         self.final_run_id = None
-        self.is_finetuning = False
         self.best_val_accuracy = 0
 
     def on_epoch_end(self, epoch, logs=None):
@@ -72,15 +102,14 @@ class MLFlowLogger(callbacks.Callback):
         if val_accuracy > self.best_val_accuracy:
             self.best_val_accuracy = val_accuracy
             mlflow.log_metric('best_val_accuracy', self.best_val_accuracy)
+            mlflow.log_metric('best_val_f1_score', self.best_val_f1_score)
             print(f'Updated best validation accuracy: {round(val_accuracy, 4)} ✅')
 
     def on_train_end(self, logs=None):        
-        # here we log the final scores (final scores might not always be the best; overfitting)
-        if hasattr(self, 'is_finetuning') and self.is_finetuning:
-            print(f'Final validation accuracy: {round(logs.get("val_accuracy", 0), 4)}')
-            # Log the final results, this is what you'll compare across models
-            mlflow.log_metric('final_val_accuracy', logs.get('val_accuracy', 0))
-            mlflow.log_metric('final_val_f1_score', logs.get('val_f1_score', 0))
+        print(f'Final validation accuracy: {round(logs.get("val_accuracy", 0), 4)}')
+        # Log the final results, this is what you'll compare across models
+        mlflow.log_metric('final_val_accuracy', logs.get('val_accuracy', 0))
+        mlflow.log_metric('final_val_f1_score', logs.get('val_f1_score', 0))
 
 def setup_mlflow_experiment():
     mlflow.set_tracking_uri('https://dagshub.com/philkleer/deepleaf_mlops.mlflow')
@@ -172,8 +201,6 @@ def train_model():
     # Step 2: Fine-tune the last layers of the base model
     print('Fine-tuning model...', end='\r')
     tf.keras.backend.clear_session()
-    # setting indicator for last training
-    # mlflow_logger.is_finetuning = True
 
     # reinitializing optimizer
     optimizer = optimizers.Adam(learning_rate=1e-4, amsgrad=True)
@@ -222,6 +249,11 @@ def train_model():
         print(f'History saved in {HISTORY_PATH} ✅.')
 
     # saving model
+    final_val_accuracy = history_2.history['val_accuracy'][-1] 
+
+    save_model_if_better(model, final_val_accuracy, MODEL_PATH)
+
+    # saving model per se
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     MODEL_DIR_TIMESTAMP = f"{MODEL_DIR}/model_{timestamp}.keras"
 
