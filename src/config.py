@@ -26,7 +26,7 @@ TEST_PATH = os.path.join(HOME_DIR, ".cache/kagglehub/datasets/vipoooool/new-plan
 
 # Model save path
 MODEL_DIR = "./models"  # Directory to store trained models
-MODEL_PATH = os.path.join(MODEL_DIR, "plant_disease_model.keras")  # Path for saving/loading the model
+MODEL_PATH = os.path.join(MODEL_DIR, "model_production.keras")  # Path for saving/loading the model
 
 # Training parameters
 BATCH_SIZE = 32
