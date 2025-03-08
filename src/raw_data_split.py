@@ -330,7 +330,7 @@ if __name__ == '__main__':
     output_dir = 'data/raw/'
     os.makedirs(output_dir, exist_ok=True)
 
-    subsets = ['subset1', 'subset2', 'subset3']
+    subsets = ['subset1', 'subset2', 'subset3', 'subset4', 'subset5', 'subset6', 'subset7', 'subset8', 'subset9', 'subset10']
     
     tfrecord_paths = {
         'train': {subset: os.path.join(output_dir, f'train_{subset}.tfrecord') for subset in subsets},
@@ -338,7 +338,7 @@ if __name__ == '__main__':
         'test':  {'all_data': os.path.join(output_dir, 'test.tfrecord')}
     }
 
-    split_ratios = (0.3, 0.3, 0.4)
+    split_ratios = (0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
     
     # Training data: splitting, transforming (tfrecord) and saving
     print('Beginning subsetting training data ...', end='\r')
