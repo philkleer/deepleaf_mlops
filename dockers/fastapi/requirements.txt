@@ -1,0 +1,19 @@
+fastapi
+uvicorn
+mlflow
+scikit-learn
+pandas
+numpy
+tensorflow  # aligned this with all other requirements*.txt files
+pyjwt
+dvc
+python-dotenv
+tenacity
+python-multipart
+setuptools
+pytest
+httpx
+requests
+psutil
+dvc
+dvc[s3]

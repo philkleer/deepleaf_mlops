@@ -1,0 +1,39 @@
+.env
+__pycache__/
+*.pyc
+
+# from Phil
+README_files/
+my_readme.md
+tf-gpu/ 
+README.html
+.DS_Store
+dvc_local/
+src/trials.py
+
+# from Erwin?
+/venv_leaf/
+dev-erwin/
+env/
+
+# DVC ignores
+data/
+temp/
+models/production_model.keras
+production_model.keras
+/mlflow
+
+# python local package
+src.egg-info/
+
+# build and distribution artifacts
+build/
+dist/
+*.egg-info/
+
+# logs if they are generated at runtime
+logs/
+mlruns/
+
+# SSH keys for automated model tracking
+ssh/

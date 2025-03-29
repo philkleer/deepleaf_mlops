@@ -1,0 +1,7 @@
+[core]
+    remote = dagshub
+['remote "remote_storage"']
+    url = ../dvc_local
+['remote "dagshub"']
+    url = s3://dvc
+    endpointurl = https://dagshub.com/philkleer/deepleaf_mlops.s3

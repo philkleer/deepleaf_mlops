@@ -1,0 +1,25 @@
+python-dotenv
+tensorflow>=2.8
+numpy
+pandas
+matplotlib
+Pillow
+kagglehub
+json5
+tqdm
+mlflow
+fastapi
+uvicorn
+tenacity
+python-multipart
+setuptools
+-e . # install src/ as package
+pytest
+httpx
+requests
+flake8
+apache-airflow
+celery
+redis
+dvc
+dvc[s3]

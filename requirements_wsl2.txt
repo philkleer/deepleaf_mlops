@@ -1,0 +1,41 @@
+python-dotenv
+# tensorflow>=2.8
+numpy
+pandas
+matplotlib
+Pillow
+kagglehub
+json5
+tensorflow
+tqdm
+mlflow
+fastapi
+uvicorn
+tenacity
+python-multipart
+setuptools
+-e . # install src/ as package
+pytest
+httpx
+requests
+pathlib
+# for orchestration
+celery
+redis
+apache-airflow
+dvc
+dvc[s3]
+
+# Are the following really needed?
+scikit-learn
+xgboost
+docker
+kubernetes
+prometheus_client
+grafana-client
+sqlalchemy # ???
+loguru # ???
+seaborn
+scipy
+plotly
+flake8

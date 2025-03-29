@@ -1,0 +1,24 @@
+# Core Application Dependencies
+fastapi
+uvicorn
+tensorflow==2.12.0
+numpy
+pandas
+scikit-learn
+Pillow
+mlflow
+dvc
+dvc[s3]
+-e .
+
+# Testing and Linting Dependencies
+pytest
+flake8
+httpx
+requests
+
+# Utility Dependencies
+python-dotenv
+tenacity
+python-multipart
+setuptools

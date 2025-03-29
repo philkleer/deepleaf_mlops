@@ -1,0 +1,196 @@
+x-airflow-common: &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.8.1}
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+    # _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- scikit-learn apache-airflow-providers-docker}
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- apache-airflow-providers-docker apache-airflow-providers-ssh}
+    REPO_ROOT: ${REPO_ROOT}
+    GIT_USER_EMAIL: ${GIT_USER_EMAIL}
+    GIT_USER_NAME: ${GIT_USER_NAME}
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  volumes:
+    - ./dockers/airflow/dags:/opt/airflow/dags
+    - ./dockers/airflow/logs:/opt/airflow/logs
+    - ./dockers/airflow/plugins:/opt/airflow/plugins
+    - /var/run/docker.sock:/var/run/docker.sock  # For DockerOperator
+    - ./data:/app/data  # Mount data for FastAPI container
+    - ./models:/app/models  # Mount models directory
+    - ./ssh:/root/.ssh:ro  # Mount SSH key for model tracking
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
+  depends_on:
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+    mlflow-postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  mlflow-postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+      POSTGRES_DB: mlflow
+    volumes:
+      - mlflow-postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mlflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+
+  mlflow:
+    image: mlflow:latest  # Build from dockers/mlflow/Dockerfile
+    build:
+      context: .
+      dockerfile: dockers/mlflow/Dockerfile
+    ports:
+      - 5001:5001
+    volumes:
+      - ./mlflow/artifacts:/app/mlflow/artifacts
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+      - ./.env:/app/.env  # For testing with .env
+    depends_on:
+      mlflow-postgres:
+        condition: service_healthy
+    # Later, when running on 'main': uncomment for production without .env
+    # environment:
+    #  - DAGSHUB_USERNAME=${DAGSHUB_USERNAME}
+    #  - DAGSHUB_KEY=${DAGSHUB_KEY}
+    #  - MLFLOW_TRACKING_URL=http://mlflow:5001
+    #  - MLFLOW_EXPERIMENT_NAME=Plant_Classification_Experiment
+    #  - MLFLOW_TRACKING_USERNAME: "your_dagshub_username"  # to be replaced with actual value
+    #  - MLFLOW_TRACKING_PASSWORD: "your_dagshub_token"  # to be replaced with actual value
+
+  fastapi-app:
+    image: fastapi-app:latest
+    build:
+      context: .
+      dockerfile: dockers/fastapi/Dockerfile
+    ports:
+      - "8001:8000"
+    volumes:
+      - ${REPO_ROOT}:/host_repo # Mount repo root for execution of DockerOperator in DAG
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+      - .:/app
+      - ./mlflow/artifacts:/app/mlflow/artifacts
+      - ./.env:/app/.env  # For testing with .env
+      - ./ssh:/root/.ssh:ro  # Mount SSH key for model tracking
+    depends_on:
+      - mlflow
+    # INFO (Phil): I think this is necessary
+    environment:
+    - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+    - GIT_USER_EMAIL=${GIT_USER_EMAIL}
+    - GIT_USER_NAME=${GIT_USER_NAME}
+    - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    # Later, when running on 'main': uncomment for production without .env
+    # environment:
+    #   - DAGSHUB_USERNAME=your_username  # to be replaced with actual value
+    #   - DAGSHUB_KEY=your_token  # to be replaced with actual value
+    #   - DAGSHUB_REPO=https://dagshub.com/schytze0/deep_leaf
+    #   - MLFLOW_EXPERIMENT_NAME=Plant_Classification_Experiment
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+volumes:
+  postgres-db-volume:
+  mlflow-postgres-db-volume:
